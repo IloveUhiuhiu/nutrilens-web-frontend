@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="vi" class="">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>NutriLens - Health & Nutrition Prototype</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/history@5/umd/history.development.js"></script>
+    <script src="https://unpkg.com/react-router@6.3.0/umd/react-router.development.js"></script>
+    <script src="https://unpkg.com/react-router-dom@6.3.0/umd/react-router-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#006d36",
+                        "primary-container": "#50c878",
+                        "on-primary": "#ffffff",
+                        "background": "#faf9f4",
+                        "surface": "#faf9f4",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container": "#efeee9",
+                        "surface-variant": "#e3e3de",
+                        "on-surface": "#1b1c19",
+                        "on-surface-variant": "#3e4a3f",
+                        "secondary": "#396756",
+                        "secondary-container": "#b9ead4",
+                        "tertiary": "#346a33",
+                        "tertiary-container": "#86c080",
+                        "error": "#ba1a1a",
+                        "outline": "#6e7a6e",
+                        "outline-variant": "#bdcabc"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                    fontFamily: {
+                        manrope: ["Manrope", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Manrope', sans-serif; }
+        .organic-shadow { box-shadow: 0 10px 40px -10px rgba(0, 109, 54, 0.15); }
+        .ambient-shadow { box-shadow: 0 10px 40px -10px rgba(0, 109, 54, 0.08); }
+        .glass-card { 
+            background-color: rgba(255, 255, 255, 0.6); 
+            backdrop-filter: blur(20px); 
+            border: 1px solid rgba(255, 255, 255, 0.4); 
+        }
+        @keyframes scan {
+            0% { top: 0%; opacity: 0; }
+            5% { opacity: 1; }
+            95% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+        .animate-scan { animation: scan 3s linear infinite; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .clip-path-chart { clip-path: polygon(0 80%, 40% 65%, 80% 50%, 160% 35%, 240% 25%, 300% 10%, 300% 100%, 0 100%); }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background antialiased">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { createRoot } = ReactDOM;
+        const { MemoryRouter, Routes, Route, Link, useNavigate, useLocation } = ReactRouterDOM;
+
+        // --- Common Components ---
+
+        const TopNavBar = ({ title = "NutriLens", showAvatar = true, icon = "filter_vintage" }) => {
+            const navigate = useNavigate();
+            return (
+                <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-white/40 backdrop-blur-md border-b border-stone-200/50 flex justify-between items-center px-5 max-w-lg mx-auto">
+                    <div className="flex items-center gap-2 text-xl font-black text-emerald-600 cursor-pointer" onClick={() => navigate('/')}>
+                        <span className="material-symbols-outlined text-primary" style={{ fontSize: '28px' }}>{icon}</span>
+                        {title}
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button onClick={() => navigate('/notifications')} className="w-10 h-10 rounded-full flex items-center justify-center text-emerald-500 hover:bg-surface-container transition-colors">
+                            <span className="material-symbols-outlined">notifications</span>
+                        </button>
+                        {showAvatar && (
+                            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-container cursor-pointer" onClick={() => navigate('/profile')}>
+                                <img alt="Profile" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJrNHoMTLQL5LeC86SPz6GUpYzjVMoRybu84IqAIcL7DhhtK5onloCVyWpH50YSvv2BCwqNwUwdteOHQmCEgEZ4A6qRfW1aGwwoCBHm3cCyqTG33-k66A_GKc7aOscr-AWtkYH3l2Qa56JRbvE0mf4u36wNT5hZLomNrHI4tMNjtDBBQO9eos6fSbpxW0we-AqIw2QnMDpzfyaiS1rBeIu3jvSkpJzAKQeXdgpFL5SXKWXCfHSZNXQcluLeUv1kMrZ_fyVMo82upLP" />
+                            </div>
+                        )}
+                    </div>
+                </header>
+            );
+        };
+
+        const BottomNavBar = () => {
+            const navigate = useNavigate();
+            const location = useLocation();
+            const path = location.pathname;
+
+            const NavItem = ({ to, icon, label, isActive }) => (
+                <Link to={to} className={`flex flex-col items-center justify-center ${isActive ? 'text-primary' : 'text-on-surface-variant'} hover:text-primary transition-all`}>
+                    <span className={`material-symbols-outlined mb-1 ${isActive ? 'fill-1' : ''}`}>{icon}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider">{label}</span>
+                </Link>
+            );
+
+            return (
+                <nav className="fixed bottom-0 left-0 right-0 z-50 h-24 bg-surface-container-lowest rounded-t-[32px] border-t border-outline-variant shadow-[0_-4px_20px_rgba(0,0,0,0.05)] flex justify-around items-end px-4 pb-6 pt-3 max-w-lg mx-auto">
+                    <NavItem to="/" icon="home" label="Home" isActive={path === '/'} />
+                    <NavItem to="/diary" icon="menu_book" label="Diary" isActive={path === '/diary'} />
+                    <div className="relative" onClick={() => navigate('/scan')}>
+                        <div className="absolute -top-16 left-1/2 -translate-x-1/2 bg-primary text-on-primary p-4 rounded-full shadow-lg border-4 border-surface-container-lowest flex items-center justify-center cursor-pointer active:scale-95 transition-transform">
+                            <span className="material-symbols-outlined" style={{ fontSize: '32px' }}>center_focus_strong</span>
+                        </div>
+                        <span className="mt-8 text-[10px] font-bold text-primary uppercase tracking-wider block text-center">AI Scan</span>
+                    </div>
+                    <NavItem to="/search" icon="search" label="Search" isActive={path === '/search'} />
+                    <NavItem to="/profile" icon="person" label="Profile" isActive={path === '/profile'} />
+                </nav>
+            );
+        };
+
+        // --- Screens ---
+
+        const LoginPage = () => {
+            const navigate = useNavigate();
+            return (
+                <div className="min-h-screen bg-background flex flex-col items-center max-w-[390px] mx-auto overflow-hidden shadow-2xl relative">
+                    <div className="h-[40%] w-full relative">
+                        <img className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDHyg2QL0dSLJbkfBjK9e6B8tC--dUbQtY0kDWg-s0ovHgA21RkIsf6x6fijSK7VihbVw4WmTJSihPZaZyw8uCGwLZ2klEJy91g0GekRRhakn9-IQ2uImS-RkRQMj_aOcoVhNdpNLlEm4KS2bD2DkVi_pDYUhN8xHWOmARye1Q3sFFUftCFi58ngLUs3l9LiYFJcKChD_2XjqBsLmzmDHsZGl4-Px5OBnWAbVS9P1INuLpF9y03OVmtKJqQVdCrOLsho8tplPPbYKQQ" alt="bg" />
+                        <div className="absolute inset-0 bg-primary/20 mix-blend-multiply"></div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-surface to-transparent"></div>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center pt-8">
+                            <div className="bg-surface-container-lowest/80 backdrop-blur-md p-4 rounded-full shadow-lg mb-3">
+                                <span className="material-symbols-outlined text-[48px] text-primary fill-1">center_focus_strong</span>
+                            </div>
+                            <h1 className="text-3xl font-extrabold text-on-surface">NutriLens</h1>
+                        </div>
+                    </div>
+                    <div className="flex-1 w-full flex flex-col px-5 relative z-20 -mt-10">
+                        <div className="w-full h-full bg-surface-container-lowest/90 backdrop-blur-[12px] rounded-t-[32px] pt-8 pb-10 px-6 flex flex-col shadow-2xl">
+                            <h2 className="text-2xl font-bold mb-2">Chào mừng trở lại!</h2>
+                            <p className="text-on-surface-variant mb-8">Đăng nhập để tiếp tục hành trình dinh dưỡng.</p>
+                            <form className="flex flex-col gap-6" onSubmit={(e) => { e.preventDefault(); navigate('/'); }}>
+                                <div className="space-y-2 text-left">
+                                    <label className="text-sm font-bold">Email hoặc Số điện thoại</label>
+                                    <input className="w-full h-12 px-4 rounded-xl border border-outline-variant bg-transparent outline-none focus:border-primary" placeholder="Nhập email" />
+                                </div>
+                                <div className="space-y-2 text-left">
+                                    <label className="text-sm font-bold">Mật khẩu</label>
+                                    <input className="w-full h-12 px-4 rounded-xl border border-outline-variant bg-transparent outline-none focus:border-primary" type="password" placeholder="Mật khẩu" />
+                                </div>
+                                <button type="submit" className="w-full h-[52px] bg-primary text-white rounded-2xl font-bold mt-2 shadow-lg shadow-primary/20">Đăng nhập</button>
+                            </form>
+                            <div className="mt-8 text-center space-y-4">
+                                <p className="text-sm text-outline">Hoặc tiếp tục với</p>
+                                <div className="flex gap-4 justify-center">
+                                    <button className="w-14 h-14 rounded-full border border-outline-variant flex items-center justify-center hover:bg-surface-container"><span className="material-symbols-outlined">g_mobiledata</span></button>
+                                    <button className="w-14 h-14 rounded-full border border-outline-variant flex items-center justify-center hover:bg-surface-container"><span className="material-symbols-outlined fill-1">ios</span></button>
+                                </div>
+                                <p className="mt-6 text-sm">Chưa có tài khoản? <Link to="/register" className="text-primary font-bold">Đăng ký ngay</Link></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const RegisterPage = () => {
+            const navigate = useNavigate();
+            return (
+                <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 max-w-lg mx-auto">
+                    <div className="text-center mb-10">
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-container/20 text-primary mb-4">
+                            <span className="material-symbols-outlined fill-1 text-4xl">search_insights</span>
+                        </div>
+                        <h1 className="text-3xl font-bold mb-2">Bắt đầu hành trình</h1>
+                        <p className="text-on-surface-variant">Khám phá dinh dưỡng tự nhiên cùng NutriLens.</p>
+                    </div>
+                    <div className="glass-card w-full rounded-3xl p-8 space-y-6">
+                        <input className="w-full h-12 px-4 rounded-xl bg-surface-container border-none focus:ring-2 focus:ring-primary" placeholder="Họ và tên" />
+                        <input className="w-full h-12 px-4 rounded-xl bg-surface-container border-none focus:ring-2 focus:ring-primary" placeholder="Email" />
+                        <input className="w-full h-12 px-4 rounded-xl bg-surface-container border-none focus:ring-2 focus:ring-primary" type="password" placeholder="Mật khẩu" />
+                        <button onClick={() => navigate('/otp')} className="w-full py-4 bg-primary text-white rounded-2xl font-bold flex items-center justify-center gap-2">Tạo tài khoản <span className="material-symbols-outlined">arrow_forward</span></button>
+                    </div>
+                    <p className="mt-8">Đã có tài khoản? <Link to="/login" className="text-primary font-bold">Đăng nhập</Link></p>
+                </div>
+            );
+        };
+
+        const OTPPage = () => {
+            const navigate = useNavigate();
+            return (
+                <div className="min-h-screen bg-background flex items-center justify-center p-6 max-w-lg mx-auto">
+                    <div className="glass-card w-full rounded-3xl p-8 text-center flex flex-col items-center">
+                        <div className="w-20 h-20 bg-primary-container/20 rounded-full flex items-center justify-center mb-6">
+                            <span className="material-symbols-outlined text-primary fill-1" style={{ fontSize: '40px' }}>mark_email_read</span>
+                        </div>
+                        <h1 className="text-2xl font-bold mb-2">Xác thực OTP</h1>
+                        <p className="text-on-surface-variant mb-8 text-sm">Nhập mã 6 số đã gửi đến email của bạn.</p>
+                        <div className="flex gap-2 justify-between w-full mb-8">
+                            {[1,2,3,4,5,6].map(i => <input key={i} className="w-10 h-14 text-center text-xl font-bold bg-surface-container rounded-xl border-none" maxLength="1" placeholder="•" />)}
+                        </div>
+                        <button onClick={() => navigate('/onboarding')} className="w-full py-4 bg-primary text-white rounded-2xl font-bold">Bắt đầu ngay</button>
+                    </div>
+                </div>
+            );
+        };
+
+        const OnboardingPage = () => {
+            const navigate = useNavigate();
+            return (
+                <div className="min-h-screen bg-background p-6 max-w-lg mx-auto">
+                    <div className="flex items-center gap-2 mb-10 pt-4">
+                        <div className="h-2 w-1/4 rounded-full bg-primary/20"></div>
+                        <div className="h-2 w-1/4 rounded-full bg-primary/20"></div>
+                        <div className="h-2 w-1/4 rounded-full bg-primary"></div>
+                        <div className="h-2 w-1/4 rounded-full bg-outline-variant/30"></div>
+                    </div>
+                    <h1 className="text-2xl font-bold mb-2">Mức độ vận động</h1>
+                    <p className="text-on-surface-variant mb-10">Chọn mức độ hoạt động thể chất hàng ngày.</p>
+                    <div className="space-y-4">
+                        {[
+                            { id: 'sedentary', icon: 'chair', title: 'Rất ít', desc: 'Văn phòng, ít đi lại.' },
+                            { id: 'light', icon: 'directions_walk', title: 'Nhẹ nhàng', desc: 'Tập thể dục 1-3 ngày/tuần.' },
+                            { id: 'moderate', icon: 'directions_run', title: 'Vừa phải', desc: 'Tập thể dục 3-5 ngày/tuần.', active: true },
+                            { id: 'active', icon: 'fitness_center', title: 'Năng động', desc: 'Cường độ cao 6-7 ngày/tuần.' }
+                        ].map(opt => (
+                            <div key={opt.id} className={`flex items-center p-4 rounded-2xl border-2 transition-all ${opt.active ? 'border-primary bg-surface-container-lowest' : 'border-outline-variant/50'}`}>
+                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center mr-4 ${opt.active ? 'bg-primary text-white' : 'bg-surface-container'}`}>
+                                    <span className="material-symbols-outlined">{opt.icon}</span>
+                                </div>
+                                <div className="flex-1 text-left">
+                                    <h3 className="font-bold">{opt.title}</h3>
+                                    <p className="text-xs text-on-surface-variant">{opt.desc}</p>
+                                </div>
+                                {opt.active && <span className="material-symbols-outlined text-primary">check_circle</span>}
+                            </div>
+                        ))}
+                    </div>
+                    <div className="fixed bottom-0 left-0 right-0 p-6 bg-background/80 backdrop-blur-xl max-w-lg mx-auto">
+                        <button onClick={() => navigate('/')} className="w-full py-4 bg-primary text-white rounded-2xl font-bold shadow-xl">Tiếp tục</button>
+                    </div>
+                </div>
+            );
+        };
+
+        const HomePage = () => {
+            const navigate = useNavigate();
+            return (
+                <div className="pb-32 pt-20 px-5 max-w-lg mx-auto">
+                    <TopNavBar />
+                    <section className="mb-8 mt-4 text-left">
+                        <h1 className="text-3xl font-bold text-primary">Chào buổi sáng, Long!</h1>
+                        <p className="text-on-surface-variant">Sẵn sàng để nuôi dưỡng cơ thể bạn?</p>
+                    </section>
+                    <section className="bg-white rounded-[32px] p-6 organic-shadow mb-8 flex flex-col items-center">
+                        <div className="relative w-48 h-48 flex items-center justify-center">
+                            <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="40" fill="transparent" stroke="#efeee9" strokeWidth="8"></circle>
+                                <circle cx="50" cy="50" r="40" fill="transparent" stroke="#006d36" strokeDasharray="251.2" strokeDashoffset="70" strokeWidth="8"></circle>
+                            </svg>
+                            <div className="absolute flex flex-col items-center">
+                                <span className="text-3xl font-bold text-primary">1.728</span>
+                                <span className="text-[10px] text-on-surface-variant uppercase tracking-wider">/ 2.400 kcal</span>
+                            </div>
+                        </div>
+                        <div className="w-full mt-8 space-y-4">
+                            {[
+                                { label: 'Protein', val: '142g', fill: 'bg-primary', w: '75%' },
+                                { label: 'Carb', val: '180g', fill: 'bg-secondary', w: '60%' },
+                                { label: 'Fat', val: '45g', fill: 'bg-tertiary', w: '40%' }
+                            ].map(macro => (
+                                <div key={macro.label}>
+                                    <div className="flex justify-between text-sm mb-1"><span>{macro.label}</span><span className="font-bold">{macro.val}</span></div>
+                                    <div className="h-2 w-full bg-surface-variant rounded-full overflow-hidden">
+                                        <div className={`h-full ${macro.fill} rounded-full`} style={{ width: macro.w }}></div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                    <section className="text-left">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-bold">Lịch sử hôm nay</h2>
+                            <button onClick={() => navigate('/diary')} className="text-primary font-bold text-sm">Xem tất cả</button>
+                        </div>
+                        <div className="space-y-4">
+                            {[
+                                { title: 'Avocado Smash', meal: 'Bữa sáng', cal: '420', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDXQF8P2aAhE9SqAOk0G99yFWhD6Rsl-ZJZCzOpPAckzj1Sa2sHdrgNMfdIqq_0CpuqP8y7iTOaV_ZFkQsyzSGwkG_VtnkOKCol77SYrdsJnuv7C76R7528P2vmnbfrN1ccpJXvW8uy3AYol1b9q5HIon2LVxVcBJM7vnavR0naX_ffSESfhV8n7vxm9mX9c7quCiMiD7f70YdUjXtk_UEBSY7oBGnjjaCL1redoA_lgh6vLsGUp1tiaQrhpD1wtgDnOA9fD9cZ9kLL' },
+                                { title: 'Quinoa Chicken', meal: 'Bữa trưa', cal: '680', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD8mvhBPzAZ0ufgml75PNYctkhb7l0d3GSPGvLIYVugN7fOUKsdNqRgLkgrLy3HmpOJU-Mouhxs5L2D44g-Gw8_cYWDtTXfd5ym55N5LaVCL5nwdJM9U75-K2aaD118z2RopkSAkhARJe87VVGVkVvjWQXYUiXifnAJ3549G3MK9h7iW1HOphLWSn9yRJTzzrxOGX2-gYjxzntMiuHxt6Ol_Mn2uxLWk0-Z1MamsZ6T0RY1JekNcAD_7QTg2XZN2-jeg6w1Noc4QIla' }
+                            ].map((item, idx) => (
+                                <div key={idx} className="bg-white rounded-xl p-3 flex items-center gap-4 organic-shadow border border-surface-variant/50">
+                                    <img src={item.img} className="w-16 h-16 rounded-lg object-cover" alt={item.title} />
+                                    <div className="flex-1">
+                                        <h3 className="font-bold text-sm">{item.title}</h3>
+                                        <p className="text-xs text-on-surface-variant">{item.meal}</p>
+                                    </div>
+                                    <span className="text-sm font-bold text-primary bg-primary-fixed/20 px-3 py-1 rounded-full">{item.cal} kcal</span>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                    <BottomNavBar />
+                </div>
+            );
+        };
+
+        const ScanProcessingPage = () => {
+            const navigate = useNavigate();
+            useEffect(() => {
+                const timer = setTimeout(() => navigate('/scan-result'), 3000);
+                return () => clearTimeout(timer);
+            }, []);
+
+            return (
+                <div className="min-h-screen bg-black overflow-hidden relative flex flex-col items-center justify-center">
+                    <div className="absolute inset-0 bg-cover bg-center blur-[20px] scale-110 opacity-70" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCKxaIkbsNpnhpJb2gmFCrW0M1Aqt5HzxalKG5eNkz2F7BDerwCeXwjiqeZ1TMw6RSbmXG3KUN09Ko98kSVjoMLWVyAkpWOHgMfvVfQFrBgn6eob5lqe9x6o9m6vVTUsmQ-Sj_QpxFailRmkE7WrKb_KcYPfeE0d5sYUfxSHMuHUTRCbPQU3nJC6xYuuwTR5lQCXDyzlSgA2K59KuKX2z6OkFh64TAACkh0ZLKQ8CU_NbTVcqs1-Iiwd7IltqB76nRGaOXPmo8sG70s')" }}></div>
+                    <div className="absolute inset-0 bg-surface/60 backdrop-blur-[2px]"></div>
+                    <TopNavBar title="Processing..." showAvatar={false} icon="filter_center_focus" />
+                    <div className="relative z-10 w-[300px] h-[300px] mb-12">
+                        <div className="absolute inset-0 border-t-4 border-l-4 border-primary-container rounded-tl-[32px]"></div>
+                        <div className="absolute inset-0 border-t-4 border-r-4 border-primary-container rounded-tr-[32px]"></div>
+                        <div className="absolute inset-0 border-b-4 border-l-4 border-primary-container rounded-bl-[32px]"></div>
+                        <div className="absolute inset-0 border-b-4 border-r-4 border-primary-container rounded-br-[32px]"></div>
+                        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                            <div className="w-full h-1 bg-primary-container shadow-[0_0_20px_#50C878] absolute animate-scan"></div>
+                        </div>
+                    </div>
+                    <div className="z-10 w-full max-w-sm glass-card rounded-[32px] p-8 text-left">
+                        <div className="flex justify-between items-end mb-4">
+                            <div>
+                                <span className="text-[10px] uppercase font-bold tracking-widest text-primary">Biometric Analysis</span>
+                                <h2 className="text-xl font-bold">Phân tích sinh học</h2>
+                            </div>
+                            <span className="text-2xl font-bold text-primary">68%</span>
+                        </div>
+                        <div className="w-full h-3 bg-surface-variant/30 rounded-full overflow-hidden mb-6">
+                            <div className="h-full bg-primary-container w-[68%] shadow-[0_0_10px_#50C878]"></div>
+                        </div>
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2 text-sm">
+                                <span className="material-symbols-outlined text-primary text-base fill-1">check_circle</span>
+                                <span>SAM 3: Phân đoạn chi tiết...</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm">
+                                <span className="material-symbols-outlined text-primary text-base fill-1">check_circle</span>
+                                <span>Qwen-VL: Gán nhãn thực thể...</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm animate-pulse">
+                                <span className="material-symbols-outlined text-primary text-base">sync</span>
+                                <span>Tính toán chỉ số đường huyết (GI)...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const ScanResultPage = () => {
+            const navigate = useNavigate();
+            return (
+                <div className="pb-32 pt-20 px-5 max-w-lg mx-auto">
+                    <TopNavBar />
+                    <div className="text-left mb-6">
+                        <h2 className="text-2xl font-bold">Kết quả phân tích</h2>
+                        <p className="text-on-surface-variant text-sm">Phát hiện 3 thành phần chính.</p>
+                    </div>
+                    <div className="relative w-full aspect-square rounded-[32px] overflow-hidden mb-8 shadow-xl">
+                        <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAh0Zy7NL1wMbZJFcRwVUdVJKxyOC5ghJbiZjZZXt7uzcaOIzo_kl3xztU8jDJ7XTkP0GTq2a5w-4R0F2IbBIfFPA2aYL-XXhiEif4VRSI5scDgFKFP3RaddS-VtzLotifakmzmeltYeb2Cw0EJGI62a_1rc9poRsbzLOyoAMUCmPwznfomwpsrENWeP8S3Mxyaq0Ow_B_vG1BDs3aedZbDbScS4Y644ciRThNRheLMLF_TsR1o5cbBVwXPDCadw_-ea6p3v6Lz70ZD" className="w-full h-full object-cover" />
+                        <div className="absolute top-[25%] left-[20%] glass-card px-2 py-1 rounded-full text-[10px] font-bold">Cá hồi 98%</div>
+                        <div className="absolute top-[55%] right-[25%] glass-card px-2 py-1 rounded-full text-[10px] font-bold">Bơ 95%</div>
+                        <div className="absolute bottom-[20%] left-[40%] glass-card px-2 py-1 rounded-full text-[10px] font-bold">Gạo lứt 99%</div>
+                    </div>
+                    <div className="bg-white rounded-3xl p-6 shadow-sm border border-outline-variant/30 flex justify-between items-center mb-8">
+                        <div>
+                            <p className="text-[10px] uppercase font-bold text-outline">Tổng năng lượng</p>
+                            <div className="flex items-baseline gap-1"><span className="text-3xl font-bold text-primary">545</span><span className="text-sm">Calo</span></div>
+                        </div>
+                        <div className="flex gap-4">
+                            <div className="text-center"><p className="text-[10px] font-bold text-tertiary">P</p><p className="font-bold">36g</p></div>
+                            <div className="text-center"><p className="text-[10px] font-bold text-secondary">C</p><p className="font-bold">42g</p></div>
+                            <div className="text-center"><p className="text-[10px] font-bold text-primary">F</p><p className="font-bold">24g</p></div>
+                        </div>
+                    </div>
+                    <button onClick={() => navigate('/diary')} className="w-full py-4 bg-primary text-white rounded-2xl font-bold flex items-center justify-center gap-2 shadow-xl">
+                        <span className="material-symbols-outlined fill-1">bookmark</span> Lưu vào Nhật ký
+                    </button>
+                    <BottomNavBar />
+                </div>
+            );
+        };
+
+        const DiaryPage = () => {
+            return (
+                <div className="pb-32 pt-20 px-5 max-w-lg mx-auto">
+                    <TopNavBar />
+                    <div className="text-left mb-6 pt-4">
+                        <p className="text-sm text-on-surface-variant">Thứ 5, 24 Tháng 10</p>
+                        <h2 className="text-3xl font-bold">Hôm nay</h2>
+                    </div>
+                    <div className="bg-surface-container/60 rounded-3xl p-6 mb-10 flex items-center justify-between">
+                        <div>
+                            <p className="text-[10px] font-bold uppercase text-on-surface-variant mb-1">Năng lượng</p>
+                            <div className="flex items-baseline gap-1">
+                                <span className="text-3xl font-bold text-primary">1,450</span>
+                                <span className="text-sm text-on-surface-variant">/ 2,000 kcal</span>
+                            </div>
+                            <p className="text-xs text-primary mt-2 flex items-center gap-1"><span className="material-symbols-outlined text-sm">local_fire_department</span> Còn lại 550 kcal</p>
+                        </div>
+                        <div className="relative w-20 h-20">
+                            <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                                <circle cx="18" cy="18" r="16" fill="none" stroke="#ddd" strokeWidth="4" />
+                                <circle cx="18" cy="18" r="16" fill="none" stroke="#006d36" strokeWidth="4" strokeDasharray="72, 100" />
+                            </svg>
+                            <div className="absolute inset-0 flex items-center justify-center text-xs font-bold">72%</div>
+                        </div>
+                    </div>
+                    <div className="space-y-8 relative pl-4">
+                        <div className="absolute top-2 bottom-0 left-[15px] w-0.5 bg-outline-variant/30"></div>
+                        <div className="relative pl-10">
+                            <div className="absolute left-[-2px] top-4 w-8 h-8 rounded-full bg-white border-2 border-primary flex items-center justify-center z-10"><span className="material-symbols-outlined text-primary text-sm">bakery_dining</span></div>
+                            <p className="text-[10px] font-bold uppercase text-on-surface-variant mb-2">07:30 Sáng</p>
+                            <div className="bg-white rounded-xl p-4 border flex gap-4">
+                                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuB1g5kvKvkUOaqWizZuV0Bm6rTF519EDFrvzCpF0ZKUtvXlMdYA6g1e7hOvNxgIajOlky97T8l8WJaOnutxuMUaBG_ecFPm1zcnQz9rW2axixmaQE5FO48-akr25WmO-av8eHrfC5sO9XgZehLK2w0m0dn2ZXeKjgH_2Vr0auuPYE6UqQjrU3kPGhxpzNhHziuGmb3sOHMQRIEkN8UuZSWoSdcj6HPbOdTe1hBj-uMM67_WgAEC71yTeYlWixowLk1tEzQ5HnBy5_UI" className="w-20 h-20 rounded-lg object-cover" />
+                                <div className="text-left"><h4 className="font-bold">Yến mạch</h4><p className="text-primary font-bold">320 kcal</p></div>
+                            </div>
+                        </div>
+                        <div className="relative pl-10">
+                            <div className="absolute left-[-2px] top-4 w-8 h-8 rounded-full bg-white border-2 border-outline-variant flex items-center justify-center z-10"><span className="material-symbols-outlined text-outline text-sm">add</span></div>
+                            <p className="text-[10px] font-bold uppercase text-on-surface-variant mb-2">12:15 Trưa</p>
+                            <div className="bg-surface-container/30 border-2 border-dashed border-outline-variant rounded-xl p-6 flex flex-col items-center justify-center"><span className="material-symbols-outlined text-primary mb-1">add_circle</span><p className="text-primary font-bold text-sm">Thêm bữa trưa</p></div>
+                        </div>
+                    </div>
+                    <BottomNavBar />
+                </div>
+            );
+        };
+
+        const SearchPage = () => {
+            return (
+                <div className="pb-32 pt-20 px-5 max-w-lg mx-auto">
+                    <TopNavBar />
+                    <div className="mt-4 flex gap-3 p-4 bg-surface-container-highest rounded-2xl items-center focus-within:ring-2 focus-within:ring-primary">
+                        <span className="material-symbols-outlined text-outline">search</span>
+                        <input className="bg-transparent border-none focus:ring-0 flex-1" placeholder="Tìm kiếm món ăn..." defaultValue="Phở bò" />
+                        <span className="material-symbols-outlined text-primary fill-1">mic</span>
+                    </div>
+                    <div className="mt-8 text-left space-y-6">
+                        <h3 className="font-bold text-on-surface-variant">Kết quả hàng đầu</h3>
+                        <div className="bg-white rounded-3xl overflow-hidden shadow-lg">
+                            <img className="h-40 w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAkMvFfDESDtfkcfUDIzGczCd65kWZR0btYcDjk_ejzry1bi1v6sQXZI1xrRLor0SKk3zz52YE2lxYEEBO2lf8NAs7zJi0jWd37UctWvBKQmUUwykm-fXmV_i0RYqqtysTayLD-ZY6UWTTD3tJvtZUCqBSdR2c9WpZVtkfRt73UFvWDVO1v8Y9a4ovhBqvtQmMfplQoXU_KRwJqceV7W2d-bAe0giN6ntaWh1K-jYnrHpw3VDIYunqcyw4a20ZmrPVCysZlKxKIPnW2" />
+                            <div className="p-6"><h2 className="text-xl font-bold">Phở Bò</h2><p className="text-sm text-on-surface-variant">Truyền thống • 350 kcal</p></div>
+                        </div>
+                        <h3 className="font-bold text-on-surface-variant">Kết quả khác</h3>
+                        {[
+                            { title: 'Bánh Mì Thịt Nướng', cal: '420', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAa6dEmsmjjV3wPDcSylZttYUXM_GO4XnZrxi24owPwhOnlam-b-vXcyogJgqLyv-fVoaSqVfwcsj8RHvAP22mf_sLUr9CsKSp5st39AqdLXZMKwtZZgHT5lMNlYxZafAto5jBA_O-KpaR_ECApwpQ1LRrTAexrHT66dE2LzEG4nma71sYBDJz4M8azMlZ7iTkVvhsGu08f2LsjWpQb01uB-FSJ5w-cy-eTMo68_UoalOZEZbL3uZANHVGhhiJmc7n77sP1PqMCcPH0' },
+                            { title: 'Gỏi Cuốn Tôm Thịt', cal: '150', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC_9k-lulAy2WdkaTwaXDtQuofSXwtbsROD814MCUeFTW_MkUxEAsuvA2GlMzAF1JRiDaZn4ULMaH3AWwC25xEC5gTILr7yOoX6Nx31FKTSVMM1ie0-oIRW6o0z_4ZAd41IYMrp-ziBuDZ22gtkFBQQePvRiLQ1_a9GuAO-zHIOfgUXu6kEgyu5KnZAaSCPN0NStHU1bZAiWAAljCMi7sgaPVXMMupqu2-gOzYbSC8o-nBM09hTj0vIPW2oIvpN1O652s6KEveD4jvH' }
+                        ].map((item, idx) => (
+                            <div key={idx} className="flex items-center gap-4 bg-white p-3 rounded-2xl border">
+                                <img src={item.img} className="w-16 h-16 rounded-xl object-cover" />
+                                <div className="flex-1 font-bold text-sm">{item.title}</div>
+                                <div className="text-right font-bold text-primary">{item.cal} <span className="text-[10px] text-outline block">KCAL</span></div>
+                            </div>
+                        ))}
+                    </div>
+                    <BottomNavBar />
+                </div>
+            );
+        };
+
+        const ProfilePage = () => {
+            const navigate = useNavigate();
+            return (
+                <div className="pb-32 pt-20 px-5 max-w-lg mx-auto text-center">
+                    <TopNavBar />
+                    <div className="mt-8 flex flex-col items-center gap-4">
+                        <div className="relative">
+                            <div className="w-24 h-24 rounded-full p-1 bg-gradient-to-tr from-primary to-primary-container">
+                                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCldVd5q0g7fADdPXcu8WitwK04D9Z6YETEc6QfTR5XyTHHTIQaLKANRXTlNxCHxQuV_HVslzhoCS-a_dtEfc5ymy0aaojEFu7kuuadkPu5xnzg602OO-9rvObKUQMZ9FGzSC1Gj8ptzuYcLDNUTajEXZBRAAUcz_-lmhZP51BgZrlS4UeHBbAxushpkwq4vZQpF_rDWUuoPqaICc7Gfl6gAgAh7A-E6Zu8--MDrRogOER3HWP2887DXRmnOYHo4QPAO_Yz703_pApN" className="w-full h-full rounded-full object-cover border-4 border-white" />
+                            </div>
+                            <button className="absolute bottom-0 right-0 w-8 h-8 bg-white rounded-full shadow border flex items-center justify-center text-primary"><span className="material-symbols-outlined text-sm">edit</span></button>
+                        </div>
+                        <div><h1 className="text-2xl font-bold">Elena Bennett</h1><p className="text-outline text-sm">ID: NL-84729</p></div>
+                    </div>
+                    <div className="mt-10 space-y-6 text-left">
+                        <div className="bg-white rounded-3xl p-4 shadow-sm border space-y-2">
+                            <button className="w-full p-3 flex justify-between items-center hover:bg-surface-container rounded-xl transition-colors">
+                                <div className="flex items-center gap-4"><span className="material-symbols-outlined text-primary fill-1">person</span><span>Thông tin cá nhân</span></div>
+                                <span className="material-symbols-outlined text-outline">chevron_right</span>
+                            </button>
+                            <button className="w-full p-3 flex justify-between items-center hover:bg-surface-container rounded-xl transition-colors">
+                                <div className="flex items-center gap-4"><span className="material-symbols-outlined text-primary fill-1">lock</span><span>Bảo mật</span></div>
+                                <span className="material-symbols-outlined text-outline">chevron_right</span>
+                            </button>
+                        </div>
+                        <div className="bg-white rounded-3xl p-4 shadow-sm border space-y-2">
+                            <button className="w-full p-3 flex justify-between items-center hover:bg-surface-container rounded-xl transition-colors">
+                                <div className="flex items-center gap-4"><span className="material-symbols-outlined text-primary fill-1">straighten</span><span>Đơn vị đo lường</span></div>
+                                <span className="material-symbols-outlined text-outline">chevron_right</span>
+                            </button>
+                            <div className="w-full p-3 flex justify-between items-center">
+                                <div className="flex items-center gap-4"><span className="material-symbols-outlined text-primary fill-1">notifications</span><span>Thông báo</span></div>
+                                <div className="w-11 h-6 bg-primary rounded-full relative"><div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                    <button onClick={() => navigate('/login')} className="mt-10 py-4 px-10 text-error bg-error/10 font-bold rounded-2xl hover:bg-error/20 transition-colors">Đăng xuất</button>
+                    <BottomNavBar />
+                </div>
+            );
+        };
+
+        const NotificationsPage = () => {
+            const navigate = useNavigate();
+            return (
+                <div className="pb-32 pt-20 px-5 max-w-lg mx-auto">
+                    <TopNavBar title="Thông báo" showAvatar={false} />
+                    <div className="text-left mb-8 mt-4"><h1 className="text-3xl font-bold text-primary">Thông báo</h1><p className="text-on-surface-variant">Cập nhật mới nhất về sức khỏe.</p></div>
+                    <div className="space-y-4">
+                        {[
+                            { title: 'Nhắc nhở bữa ăn', time: '10 PHÚT TRƯỚC', desc: 'Đã đến giờ ăn trưa. Nhớ bổ sung protein!', icon: 'restaurant', color: 'bg-secondary-container' },
+                            { title: 'Tư vấn sức khỏe AI', time: '2 GIỜ TRƯỚC', desc: 'Bạn đang thiếu hụt Vitamin C tuần này.', icon: 'psychology', color: 'bg-tertiary-container' }
+                        ].map((notif, idx) => (
+                            <div key={idx} className="glass-card p-6 flex gap-4 rounded-3xl text-left relative">
+                                <div className="absolute top-6 right-6 w-3 h-3 bg-primary-container rounded-full shadow-lg"></div>
+                                <div className={`w-12 h-12 rounded-2xl ${notif.color} flex items-center justify-center flex-shrink-0`}><span className="material-symbols-outlined">{notif.icon}</span></div>
+                                <div><h3 className="font-bold">{notif.title} <span className="text-[10px] text-outline ml-2">{notif.time}</span></h3><p className="text-sm text-on-surface-variant mt-1">{notif.desc}</p></div>
+                            </div>
+                        ))}
+                    </div>
+                    <BottomNavBar />
+                </div>
+            );
+        };
+
+        const CameraScanPage = () => {
+            const navigate = useNavigate();
+            return (
+                <div className="h-screen bg-black overflow-hidden relative">
+                    <img className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD8WAUIEsXTESDOujA69NpQKkjM00CJ6pyJKRC2LFkVxXYDFOuxmyhkzT4hXzuhN43NyrY9OCYJZvP88Rzj1ftsdGSYxTRF4tqZnSyT3PDQm9dcLa1L1EZb3IfefoUFzqNRy0TY261ajGQFGiUSqz5bpjY7UloOFKFDDcUl4mFYfTV5R-N3p_SQ85YVwpm55mribnHkMcLIRKHTRzxI44-unCm54_L3UYvCFHsFlpN7JnN_JbjjCpGcGJisPjXGrwIIltLIp768fxjP" />
+                    <div className="absolute top-0 left-0 right-0 p-8 flex justify-between items-center z-10">
+                        <button onClick={() => navigate(-1)} className="w-12 h-12 rounded-full bg-black/30 backdrop-blur-xl border border-white/20 flex items-center justify-center text-white"><span className="material-symbols-outlined">close</span></button>
+                        <div className="flex gap-4">
+                            <button className="w-12 h-12 rounded-full bg-black/30 backdrop-blur-xl border border-white/20 flex items-center justify-center text-white"><span className="material-symbols-outlined">flash_off</span></button>
+                        </div>
+                    </div>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                        <div className="relative w-72 h-72 rounded-[48px] border-4 border-primary-container shadow-[0_0_20px_#50C878] flex items-center justify-center">
+                            <div className="absolute top-[-10px] right-[-10px] bg-white rounded-full p-2 border border-primary"><span className="material-symbols-outlined text-primary fill-1">eco</span></div>
+                            <div className="w-full h-0.5 bg-primary-container shadow-[0_0_10px_#50C878] animate-scan absolute"></div>
+                        </div>
+                        <div className="mt-10 bg-black/40 backdrop-blur-md px-6 py-2 rounded-full border border-white/20 text-white text-[10px] font-bold tracking-widest uppercase">Giữ máy song song với đĩa ăn</div>
+                    </div>
+                    <div className="absolute bottom-10 left-0 right-0 flex flex-col items-center gap-6">
+                        <div className="flex gap-8 text-[10px] font-bold text-white/60 tracking-widest uppercase">
+                            <span className="text-primary-container border-b-2 border-primary-container pb-1">Thực phẩm</span>
+                            <span>Thành phần</span>
+                            <span>Mã vạch</span>
+                        </div>
+                        <button onClick={() => navigate('/scan-processing')} className="w-20 h-20 rounded-full bg-primary flex items-center justify-center border-4 border-white/20 active:scale-95 transition-transform">
+                            <span className="material-symbols-outlined text-white text-4xl">center_focus_weak</span>
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            return (
+                <MemoryRouter>
+                    <Routes>
+                        <Route path="/" element={<HomePage />} />
+                        <Route path="/login" element={<LoginPage />} />
+                        <Route path="/register" element={<RegisterPage />} />
+                        <Route path="/otp" element={<OTPPage />} />
+                        <Route path="/onboarding" element={<OnboardingPage />} />
+                        <Route path="/scan" element={<CameraScanPage />} />
+                        <Route path="/scan-processing" element={<ScanProcessingPage />} />
+                        <Route path="/scan-result" element={<ScanResultPage />} />
+                        <Route path="/diary" element={<DiaryPage />} />
+                        <Route path="/search" element={<SearchPage />} />
+                        <Route path="/profile" element={<ProfilePage />} />
+                        <Route path="/notifications" element={<NotificationsPage />} />
+                    </Routes>
+                </MemoryRouter>
+            );
+        };
+
+        const container = document.getElementById('root');
+        const root = createRoot(container);
+        root.render(<App />);
+    </script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color: #1b1c19;
+  background: #faf9f4;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+@layer components {
+  .field {
+    @apply h-10 w-full rounded-xl border border-border bg-white px-3 text-sm text-ink outline-none transition placeholder:text-subtle/60 focus:border-primary focus:ring-4 focus:ring-primary/10;
+  }
+
+  .textarea-field {
+    @apply min-h-24 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-ink outline-none transition placeholder:text-subtle/60 focus:border-primary focus:ring-4 focus:ring-primary/10;
+  }
+
+  .btn {
+    @apply inline-flex h-10 items-center justify-center gap-2 rounded-xl px-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-primary {
+    @apply btn bg-primary text-white shadow-sm hover:bg-primary/90;
+  }
+
+  .btn-secondary {
+    @apply btn border border-border bg-white text-ink hover:bg-muted;
+  }
+
+  .btn-danger {
+    @apply btn bg-danger text-white hover:bg-danger/90;
+  }
+
+  .panel {
+    @apply rounded-2xl border border-border bg-white shadow-panel;
+  }
+}
