@@ -1,0 +1,55 @@
+name: Deploy NutriLens Frontend
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            APP_DIR="$HOME/nutrilens-web-frontend"
+            REPO_URL="https://github.com/IloveUhiuhiu/nutrilens-web-frontend.git"
+
+            # 1. Nếu thư mục dự án hoàn toàn chưa có Git
+            if [ ! -d "$APP_DIR/.git" ]; then
+              echo "Thư mục đã có hoặc chưa có, tiến hành init Git tại chỗ..."
+              mkdir -p "$APP_DIR"
+              cd "$APP_DIR"
+              git init
+              git remote add origin "$REPO_URL" || git remote set-url origin "$REPO_URL"
+            else
+              cd "$APP_DIR"
+            fi
+
+            # 2. Đồng bộ và kéo code mới nhất từ nhánh main về
+            git fetch origin main
+            git checkout -B main origin/main
+            git reset --hard origin/main
+
+            # 3. Kiểm tra nghiêm ngặt sự tồn tại của file .env bạn tự tạo
+            if [ ! -f .env ]; then
+              echo "🚨 LỖI: Không tìm thấy file .env tại $APP_DIR/.env!"
+              exit 1
+            fi
+
+            # 4. Cài dependencies và build Vite frontend
+            npm ci
+            npm run build
+
+            # 5. Reload Nginx để đảm bảo cấu hình đang chạy ổn định
+            sudo nginx -t
+            sudo systemctl reload nginx

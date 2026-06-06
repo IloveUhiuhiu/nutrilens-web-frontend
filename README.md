@@ -91,3 +91,67 @@ The backend root from this workspace is expected at:
 ```bash
 /home/dngphclng/Code/nutrilens-backend
 ```
+
+## CI/CD to EC2
+
+The GitHub Actions workflow at `.github/workflows/deploy.yml` deploys the frontend in the same style as the backend: SSH into EC2, sync the `main` branch, install dependencies, and build the Vite app on the server.
+
+### One-time EC2 setup
+
+```bash
+sudo apt update
+sudo apt install -y nginx git curl
+
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
+
+mkdir -p ~/nutrilens-web-frontend
+```
+
+Create `~/nutrilens-web-frontend/.env` manually on EC2:
+
+```bash
+VITE_API_BASE_URL=https://api.yourdomain.com/api/v1
+```
+
+Create `/etc/nginx/sites-available/nutrilens-web-frontend`:
+
+```nginx
+server {
+    listen 80;
+    server_name YOUR_DOMAIN_OR_EC2_PUBLIC_IP;
+
+    root /home/ubuntu/nutrilens-web-frontend/dist;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location ~* \.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2)$ {
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+    }
+}
+```
+
+Enable the site:
+
+```bash
+sudo ln -s /etc/nginx/sites-available/nutrilens-web-frontend /etc/nginx/sites-enabled/
+sudo rm -f /etc/nginx/sites-enabled/default
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+### GitHub repository secrets
+
+Add these in GitHub: `Settings` -> `Secrets and variables` -> `Actions`.
+
+```text
+SERVER_HOST=YOUR_EC2_PUBLIC_IP_OR_DOMAIN
+SERVER_USER=ubuntu
+SSH_PRIVATE_KEY=private key that can SSH to EC2
+```
+
+The workflow runs automatically on pushes to `main`.
