@@ -72,7 +72,7 @@ export function DashboardPage() {
             <MetricCard label="Users" value={formatNumber(users.data?.total_users)} helper={`${formatNumber(users.data?.active_users)} active users`} icon={Users} />
             <MetricCard label="Staff/Admin" value={formatNumber((users.data?.staff_users || 0) + (users.data?.admins || 0))} helper="Internal operators" icon={Activity} />
             <MetricCard label="Meals" value={formatNumber(nutrition.data?.meal_count)} helper={`${formatNumber(nutrition.data?.log_count)} daily logs`} icon={Apple} />
-            <MetricCard label="Calories" value={formatCalories(nutrition.data?.totals.total_calories)} helper="Total tracked energy" icon={BarChart3} />
+            <MetricCard label="Calories" value={formatCalories(nutrition.data?.totals.sum_calories)} helper="Total tracked energy" icon={BarChart3} />
             <MetricCard label="Inference jobs" value={formatNumber(inference.data?.total_jobs)} helper={`${formatNumber(inference.data?.average_latency_ms, 0)} ms avg latency`} icon={BrainCircuit} />
             <MetricCard label="Open feedback" value={formatNumber(inference.data?.open_feedback ?? inference.data?.feedback_open)} helper="Needs review" icon={Database} />
             <MetricCard label="Daily logs" value={formatNumber(system.data?.total_daily_logs)} helper="All users" icon={Database} />

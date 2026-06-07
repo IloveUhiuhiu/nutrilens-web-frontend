@@ -106,6 +106,9 @@ curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt install -y nodejs
 
 mkdir -p ~/nutrilens-web-frontend
+
+# Allow Nginx's www-data user to traverse /home/ubuntu and read the built files.
+sudo chmod 711 /home/ubuntu
 ```
 
 Create `~/nutrilens-web-frontend/.env` manually on EC2:

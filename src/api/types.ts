@@ -217,7 +217,7 @@ export type NutritionMetrics = {
   log_count: number
   meal_count: number
   totals: {
-    total_calories: number
+    sum_calories: number
     total_protein: number
     total_carbs: number
     total_fat: number
