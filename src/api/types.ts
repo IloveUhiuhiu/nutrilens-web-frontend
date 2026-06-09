@@ -28,6 +28,7 @@ export type Profile = {
   id: string
   full_name: string | null
   email: string
+  avatar_url?: string | null
   phone_number?: string | null
   gender?: 'M' | 'F' | 'O'
   birth_date?: string | null
@@ -43,9 +44,12 @@ export type AccountListItem = {
   full_name: string | null
   email: string
   phone_number: string | null
+  gender: 'M' | 'F' | 'O'
+  avatar_url: string | null
   role: 'admin' | 'staff' | 'user'
   is_active: boolean
   date_joined: string
+  last_login: string | null
 }
 
 export type AccountDetail = Profile & {
@@ -57,11 +61,22 @@ export type AccountDetail = Profile & {
   weight_histories: { weight: number; measured_at: string }[]
   daily_logs: DailyLogSummary[]
   date_joined: string
+  last_login: string | null
 }
 
 export type QuotaConfig = {
+  key: string
   guest_scan_limit: number
   updated_at: string
+}
+
+export type AccountOTP = {
+  id: number
+  contact_info: string
+  otp_code: string
+  purpose: 'account_verify' | 'password_reset'
+  expired_at: string
+  is_verified: boolean
 }
 
 export type Food = {
@@ -84,6 +99,7 @@ export type Ingredient = {
   fat_per_100g: number
   carb_per_100g: number
   protein_per_100g: number
+  image_url?: string | null
   fdc_id_ref?: string | null
 }
 
@@ -129,7 +145,7 @@ export type InferenceResult = {
 
 export type InferenceJob = {
   id: string
-  image: string
+  image: string | null
   depth_map?: string | null
   camera_metadata: Record<string, unknown>
   status: 'pending' | 'running' | 'succeeded' | 'failed'
@@ -140,6 +156,7 @@ export type InferenceJob = {
   result?: InferenceResult | null
   created_at: string
   updated_at: string
+  user?: string
 }
 
 export type InferenceFeedback = {
@@ -192,6 +209,25 @@ export type MealEntry = {
   components: MealComponent[]
 }
 
+export type AdminMealListItem = {
+  id: string
+  user_id: string
+  user_email: string
+  log_date: string
+  meal_time: string
+  source_type: 'image' | 'barcode' | 'text' | 'voice' | 'manual'
+  barcode?: string | null
+  search_query?: string | null
+  serving_amount?: number | null
+  serving_unit_label?: string | null
+  is_confirmed: boolean
+  total_calories: number
+  total_protein: number
+  total_carbs: number
+  total_fat: number
+  total_weight: number
+}
+
 export type DailyLogSummary = {
   id: string
   date: string
@@ -200,6 +236,12 @@ export type DailyLogSummary = {
   total_carbs: number
   total_fat: number
   total_weight: number
+}
+
+export type AdminDailyLogItem = DailyLogSummary & {
+  user_id: string
+  user_email: string
+  meal_count: number
 }
 
 export type DailyLog = DailyLogSummary & {

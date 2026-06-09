@@ -3,7 +3,7 @@ import { AppShell, LoginLayout } from './layout/AppShell'
 import { ProtectedRoute } from './layout/ProtectedRoute'
 import { LoginPage } from './pages/LoginPage'
 import { DashboardPage } from './pages/DashboardPage'
-import { AccountDetailPage, AccountsPage, ActivityLevelsPage, SettingsPage } from './pages/AccountsPages'
+import { AccountDetailPage, AccountOTPPage, AccountsPage, ActivityLevelsPage, SettingsPage } from './pages/AccountsPages'
 import { AdviceRulesPage, FoodsPage, IngredientsPage, NutritionLayout, PackagedFoodsPage } from './pages/NutritionPages'
 import { FeedbackPage, InferenceLayout, InferenceMetricsPage, JobDetailPage, JobsPage } from './pages/InferencePages'
 import { AnalysisLayout, LogDetailPage, LogsPage, MealDetailPage, MealsPage } from './pages/AnalysisPages'
@@ -20,6 +20,7 @@ export default function App() {
           <Route path="accounts" element={<AccountsPage />} />
           <Route path="accounts/:id" element={<AccountDetailPage />} />
           <Route path="accounts/activity-levels" element={<ActivityLevelsPage />} />
+          <Route path="accounts/otp" element={<AccountOTPPage />} />
           <Route path="nutrition" element={<NutritionLayout />}>
             <Route index element={<Navigate to="/nutrition/foods" replace />} />
             <Route path="foods" element={<FoodsPage />} />
