@@ -266,7 +266,7 @@ function JobDrawer({ job, onClose }: { job: InferenceJob; onClose: () => void })
 // ─── Job Detail Page ──────────────────────────────────────────────────────────
 
 export function JobDetailPage() {
-  const { id = '' } = require('react-router-dom').useParams()
+  const { id = '' } = useParams()
   const query = useQuery({
     queryKey: ['inference-job', id],
     queryFn: () => request<InferenceJob>({ url: `/admin/inference/jobs/${id}/` }),

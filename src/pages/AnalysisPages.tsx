@@ -32,10 +32,10 @@ const SOURCE_LABELS: Record<string, string> = {
   manual: 'Thủ công',
 }
 
-function sourceTone(s: string): 'blue' | 'green' | 'amber' | 'neutral' | 'purple' {
-  const map: Record<string, 'blue' | 'green' | 'amber' | 'neutral' | 'purple'> = {
+function sourceTone(s: string): 'blue' | 'green' | 'amber' | 'neutral' | 'mint' {
+  const map: Record<string, 'blue' | 'green' | 'amber' | 'neutral' | 'mint'> = {
     image: 'blue',
-    barcode: 'purple',
+    barcode: 'mint',
     text: 'green',
     voice: 'amber',
     manual: 'neutral',
