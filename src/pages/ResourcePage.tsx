@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 import { request } from '../api/client'
 import type { Page } from '../api/types'
 import { DataTable, type Column } from '../components/DataTable'
-import { Button, Card, Input, Modal, PageHeader, Select } from '../components/ui'
+import { Button, Card, DeleteConfirmModal, Input, Modal, PageHeader, Select } from '../components/ui'
 import { ResourceForm, type FieldConfig } from '../components/ResourceForm'
 import type { ReactNode } from 'react'
 
@@ -31,6 +31,7 @@ export function ResourcePage<T extends { id: string | number }>({ config }: { co
   const [editing, setEditing] = useState<T | null>(null)
   const [isCreateOpen, setCreateOpen] = useState(false)
   const [detailItem, setDetailItem] = useState<T | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<string | number | null>(null)
 
   const params = useMemo(() => ({ page, search: search || undefined, ...filters }), [filters, page, search])
   const queryKey = ['resource', config.endpoint, params]
@@ -106,9 +107,7 @@ export function ResourcePage<T extends { id: string | number }>({ config }: { co
                 variant="secondary"
                 className="h-8 w-8 p-0"
                 title="Xóa"
-                onClick={() => {
-                  if (window.confirm('Xóa bản ghi này?')) deleteMutation.mutate(id)
-                }}
+                onClick={() => setDeleteTarget(id)}
               >
                 <Trash2 className="h-3.5 w-3.5 text-danger" />
               </Button>
@@ -199,6 +198,19 @@ export function ResourcePage<T extends { id: string | number }>({ config }: { co
           isSubmitting={updateMutation.isPending}
         />
       </Modal>
+
+      {/* Delete confirm modal */}
+      <DeleteConfirmModal
+        open={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget !== null) {
+            deleteMutation.mutate(deleteTarget)
+            setDeleteTarget(null)
+          }
+        }}
+        isDeleting={deleteMutation.isPending}
+      />
     </>
   )
 }

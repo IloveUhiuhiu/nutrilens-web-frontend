@@ -25,7 +25,9 @@ export function LoginPage() {
         <div className="absolute inset-0 bg-primary/55" />
         <div className="relative flex h-full flex-col justify-between p-12 text-white">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/95 text-lg font-extrabold text-primary">NL</div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/95 shadow-md">
+              <img src="/logo.png" alt="NutriLens" className="h-9 w-9 object-contain" />
+            </div>
             <div>
               <p className="text-xl font-extrabold">NutriLens</p>
               <p className="text-sm text-white/75">Health & Nutrition Intelligence</p>
@@ -43,7 +45,9 @@ export function LoginPage() {
       <section className="flex min-w-0 items-center justify-start overflow-hidden p-4 sm:p-5 lg:justify-center">
         <div className="w-full max-w-[22rem] rounded-3xl border border-border bg-white p-6 shadow-panel sm:max-w-md sm:p-8">
           <div className="mb-8">
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-lg font-extrabold text-white">NL</div>
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary p-2 shadow-md shadow-primary/25">
+              <img src="/logo.png" alt="NutriLens" className="h-full w-full object-contain" />
+            </div>
             <h1 className="text-2xl font-extrabold text-ink">Đăng nhập admin</h1>
             <p className="mt-2 text-sm text-subtle">Sử dụng tài khoản staff/admin từ backend NutriLens.</p>
           </div>

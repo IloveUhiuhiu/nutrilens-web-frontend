@@ -10,7 +10,7 @@ import {
   Badge,
   Button,
   Card,
-  Drawer,
+  DetailModal,
   DrawerField,
   IdCell,
   ImagePreview,
@@ -192,12 +192,11 @@ export function JobsPage() {
 
 function JobDrawer({ job, onClose }: { job: InferenceJob; onClose: () => void }) {
   return (
-    <Drawer
+    <DetailModal
       open
       onClose={onClose}
       title={`Job AI: ${job.id}`}
       subtitle={`${JOB_STATUS_LABELS[job.status] || job.status} · ${formatDateTime(job.created_at)}`}
-      width={620}
     >
       <div className="space-y-4">
         {/* Images */}
@@ -259,7 +258,7 @@ function JobDrawer({ job, onClose }: { job: InferenceJob; onClose: () => void })
           />
         </div>
       </div>
-    </Drawer>
+    </DetailModal>
   )
 }
 
@@ -511,12 +510,11 @@ function FeedbackDrawer({
   onUpdateStatus: (s: string) => void
 }) {
   return (
-    <Drawer
+    <DetailModal
       open
       onClose={onClose}
       title="Chi tiết Phản hồi AI"
       subtitle={`${feedback.id} · ${formatDateTime(feedback.created_at)}`}
-      width={580}
     >
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
@@ -567,7 +565,7 @@ function FeedbackDrawer({
           </Button>
         </div>
       </div>
-    </Drawer>
+    </DetailModal>
   )
 }
 

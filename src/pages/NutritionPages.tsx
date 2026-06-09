@@ -3,10 +3,9 @@ import { NavLink, Outlet } from 'react-router-dom'
 import type { AdviceRule, Food, Ingredient, PackagedFood } from '../api/types'
 import {
   Badge,
-  Drawer,
+  DetailModal,
   DrawerField,
   ImagePreview,
-  JsonViewer,
   MacroBadge,
 } from '../components/ui'
 import type { Column } from '../components/DataTable'
@@ -49,7 +48,7 @@ export function NutritionLayout() {
 
 function FoodDrawer({ food, onClose }: { food: Food; onClose: () => void }) {
   return (
-    <Drawer
+    <DetailModal
       open
       onClose={onClose}
       title={food.vi_name}
@@ -66,7 +65,7 @@ function FoodDrawer({ food, onClose }: { food: Food; onClose: () => void }) {
           <DrawerField label="Đồng bộ lần cuối" value={formatDateTime(food.last_synced_at)} />
         </div>
       </div>
-    </Drawer>
+    </DetailModal>
   )
 }
 
@@ -101,16 +100,48 @@ const foodConfig: ResourceConfig<Food> = {
 
 // ─── Ingredient ───────────────────────────────────────────────────────────────
 
+function IngredientIconFrame({ src, name }: { src?: string; name: string }) {
+  const [error, setError] = useState(false)
+  if (!src || error) {
+    return (
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-extrabold text-subtle">
+        {name.charAt(0).toUpperCase()}
+      </div>
+    )
+  }
+  return (
+    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-green-50 p-1.5 ring-1 ring-green-100">
+      <img
+        src={src}
+        alt={name}
+        className="h-full w-full object-contain"
+        onError={() => setError(true)}
+      />
+    </div>
+  )
+}
+
 function IngredientDrawer({ ingredient, onClose }: { ingredient: Ingredient; onClose: () => void }) {
   return (
-    <Drawer
+    <DetailModal
       open
       onClose={onClose}
       title={ingredient.vi_name}
       subtitle={`${ingredient.id} · ${ingredient.en_name}`}
     >
       <div className="space-y-4">
-        <ImagePreview src={ingredient.image_url} alt={ingredient.vi_name} height={200} />
+        {/* Circular icon frame for ingredient icon */}
+        {ingredient.image_url && (
+          <div className="flex justify-center">
+            <div className="flex h-28 w-28 items-center justify-center rounded-full bg-green-50 p-4 ring-2 ring-green-100 shadow-sm">
+              <img
+                src={ingredient.image_url}
+                alt={ingredient.vi_name}
+                className="h-full w-full object-contain"
+              />
+            </div>
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-3">
           <DrawerField label="Tên tiếng Việt" value={ingredient.vi_name} />
           <DrawerField label="Tên tiếng Anh" value={ingredient.en_name} />
@@ -136,7 +167,7 @@ function IngredientDrawer({ ingredient, onClose }: { ingredient: Ingredient; onC
           </div>
         </div>
       </div>
-    </Drawer>
+    </DetailModal>
   )
 }
 
@@ -147,11 +178,18 @@ const ingredientConfig: ResourceConfig<Ingredient> = {
   searchPlaceholder: 'Tìm theo tên hoặc mã USDA...',
   columns: [
     {
-      key: 'vi_name',
-      header: 'Tên Việt',
-      render: (item) => <span className="font-bold">{item.vi_name}</span>,
+      key: 'icon_name',
+      header: 'Nguyên liệu',
+      render: (item) => (
+        <div className="flex items-center gap-2.5">
+          <IngredientIconFrame src={item.image_url ?? undefined} name={item.vi_name} />
+          <div>
+            <p className="font-bold text-ink">{item.vi_name}</p>
+            <p className="text-xs text-subtle">{item.en_name}</p>
+          </div>
+        </div>
+      ),
     },
-    { key: 'en_name', header: 'Tên Anh', render: (item) => item.en_name },
     {
       key: 'density',
       header: 'Khối lượng riêng (g/cm³)',
@@ -199,12 +237,12 @@ function alertTone(level: string): 'green' | 'amber' | 'red' {
 
 function AdviceDrawer({ rule, onClose }: { rule: AdviceRule; onClose: () => void }) {
   return (
-    <Drawer
+    <DetailModal
       open
       onClose={onClose}
       title="Chi tiết Quy tắc Lời khuyên"
       subtitle={`${formatNumber(rule.min_percent)}% – ${formatNumber(rule.max_percent)}% TDEE`}
-      width={500}
+      width="max-w-xl"
     >
       <div className="grid grid-cols-2 gap-3">
         <DrawerField label="Ngưỡng TDEE tối thiểu (%)" value={`${formatNumber(rule.min_percent, 1)}%`} />
@@ -224,7 +262,7 @@ function AdviceDrawer({ rule, onClose }: { rule: AdviceRule; onClose: () => void
           fullWidth
         />
       </div>
-    </Drawer>
+    </DetailModal>
   )
 }
 
@@ -277,7 +315,7 @@ const adviceConfig: ResourceConfig<AdviceRule> = {
 
 function PackagedFoodDrawer({ food, onClose }: { food: PackagedFood; onClose: () => void }) {
   return (
-    <Drawer
+    <DetailModal
       open
       onClose={onClose}
       title={food.name}
@@ -314,7 +352,7 @@ function PackagedFoodDrawer({ food, onClose }: { food: PackagedFood; onClose: ()
           </div>
         </div>
       </div>
-    </Drawer>
+    </DetailModal>
   )
 }
 
@@ -388,6 +426,3 @@ export function AdviceRulesPage() {
 export function PackagedFoodsPage() {
   return <ResourcePage config={packagedConfig} />
 }
-
-// suppress unused-import warnings for JsonViewer (referenced in Ingredient drawer raw_payload expansion if needed)
-void JsonViewer

@@ -1,8 +1,18 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
-import { KeyRound, Plus, Search, ShieldCheck, UserCheck } from 'lucide-react'
+import { KeyRound, Search, ShieldCheck, UserCheck } from 'lucide-react'
 import { toast } from 'sonner'
+import {
+  AreaChart,
+  Area,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
+import { format, parseISO } from 'date-fns'
 import { request } from '../api/client'
 import type { AccountDetail, AccountListItem, AccountOTP, ActivityLevel, Page, QuotaConfig } from '../api/types'
 import { DataTable, type Column } from '../components/DataTable'
@@ -12,8 +22,8 @@ import {
   Button,
   Card,
   DateRangePicker,
+  DetailModal,
   DrawerField,
-  Drawer,
   IdCell,
   Input,
   Modal,
@@ -106,6 +116,7 @@ const accountColumns: Column<AccountListItem>[] = [
 ]
 
 export function AccountsPage() {
+  const queryClient = useQueryClient()
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
   const [role, setRole] = useState('')
@@ -129,6 +140,15 @@ export function AccountsPage() {
       }),
   })
 
+  const statusMutation = useMutation({
+    mutationFn: ({ id, is_active }: { id: string; is_active: boolean }) =>
+      request<AccountDetail>({ url: `/admin/accounts/${id}/status/`, method: 'PATCH', data: { is_active } }),
+    onSuccess: async () => {
+      toast.success('Đã cập nhật trạng thái tài khoản')
+      await queryClient.invalidateQueries({ queryKey: ['accounts'] })
+    },
+  })
+
   const columnsWithAction: Column<AccountListItem>[] = [
     ...accountColumns,
     {
@@ -136,9 +156,20 @@ export function AccountsPage() {
       header: '',
       className: 'px-4 py-3 text-right',
       render: (item) => (
-        <Button variant="secondary" className="h-8 px-2.5 text-xs" onClick={() => setDrawerItem(item)}>
-          Xem Chi tiết
-        </Button>
+        <div className="flex items-center justify-end gap-1.5">
+          <Button
+            variant={item.is_active ? 'secondary' : 'primary'}
+            className="h-8 px-2.5 text-xs"
+            title={item.is_active ? 'Khóa tài khoản' : 'Mở khóa'}
+            onClick={() => statusMutation.mutate({ id: item.id, is_active: !item.is_active })}
+          >
+            <UserCheck className="h-3.5 w-3.5" />
+            {item.is_active ? 'Khóa' : 'Mở khóa'}
+          </Button>
+          <Button variant="secondary" className="h-8 px-2.5 text-xs" onClick={() => setDrawerItem(item)}>
+            Chi tiết
+          </Button>
+        </div>
       ),
     },
   ]
@@ -209,15 +240,15 @@ function AccountQuickDrawer({ id, onClose }: { id: string; onClose: () => void }
   const account = query.data
 
   return (
-    <Drawer
+    <DetailModal
       open
       onClose={onClose}
       title={account?.full_name || account?.email || id}
-      subtitle={`${id} · ${account ? roleLabel(account.role) : ''}`}
+      subtitle={`${id}${account ? ` · ${roleLabel(account.role)}` : ''}`}
     >
       {query.isLoading && <Skeleton className="h-[480px]" />}
       {account && <AccountDetailContent account={account} />}
-    </Drawer>
+    </DetailModal>
   )
 }
 
@@ -365,6 +396,48 @@ function AccountDetailContent({ account }: { account: AccountDetail }) {
           <DrawerField label="Số điện thoại" value={account.phone_number || '—'} />
         </div>
       </Card>
+
+      {/* Calorie intake chart */}
+      {account.daily_logs.length > 0 && (
+        <Card className="p-5">
+          <p className="mb-4 font-extrabold text-ink">Lượng Calo tiêu thụ hàng ngày</p>
+          <ResponsiveContainer width="100%" height={200}>
+            <AreaChart
+              data={account.daily_logs
+                .slice()
+                .sort((a, b) => a.date.localeCompare(b.date))
+                .map((log) => ({
+                  date: format(parseISO(log.date), 'dd/MM'),
+                  calo: log.total_calories,
+                }))}
+              margin={{ top: 4, right: 4, left: -10, bottom: 0 }}
+            >
+              <defs>
+                <linearGradient id="calGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#40916C" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#40916C" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#9ca3af' }} tickLine={false} axisLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} tickLine={false} axisLine={false} unit=" kcal" width={70} />
+              <Tooltip
+                contentStyle={{ borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 12 }}
+                formatter={(v) => [`${Number(v).toLocaleString()} kcal`, 'Calo']}
+              />
+              <Area
+                type="monotone"
+                dataKey="calo"
+                stroke="#1B4332"
+                strokeWidth={2}
+                fill="url(#calGrad)"
+                dot={{ r: 3, fill: '#1B4332', strokeWidth: 0 }}
+                activeDot={{ r: 5 }}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </Card>
+      )}
 
       {/* Weight history + Daily logs */}
       <div className="grid gap-4 xl:grid-cols-2">
@@ -587,12 +660,12 @@ export function AccountOTPPage() {
         emptyTitle="Chưa có bản ghi OTP"
       />
       {drawerItem && (
-        <Drawer
+        <DetailModal
           open
           onClose={() => setDrawerItem(null)}
           title="Chi tiết OTP"
           subtitle={drawerItem.contact_info}
-          width={480}
+          width="max-w-lg"
         >
           <div className="grid grid-cols-2 gap-3">
             <DrawerField label="ID" value={String(drawerItem.id)} />
@@ -609,7 +682,7 @@ export function AccountOTPPage() {
               }
             />
           </div>
-        </Drawer>
+        </DetailModal>
       )}
     </>
   )

@@ -9,6 +9,7 @@ import {
   Badge,
   Card,
   DateRangePicker,
+  DetailModal,
   DrawerField,
   IdCell,
   ImagePreview,
@@ -17,7 +18,6 @@ import {
   PageHeader,
   Select,
   Skeleton,
-  Drawer,
 } from '../components/ui'
 import { formatDate, formatDateTime, formatNumber } from '../lib/format'
 import { cn } from '../lib/utils'
@@ -234,12 +234,11 @@ export function MealsPage() {
 
 function MealQuickDrawer({ item, onClose }: { item: AdminMealListItem; onClose: () => void }) {
   return (
-    <Drawer
+    <DetailModal
       open
       onClose={onClose}
       title="Chi tiết Bữa ăn"
       subtitle={`${item.id} · ${formatDate(item.log_date)}`}
-      width={560}
     >
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
@@ -293,7 +292,7 @@ function MealQuickDrawer({ item, onClose }: { item: AdminMealListItem; onClose: 
           </div>
         </div>
       </div>
-    </Drawer>
+    </DetailModal>
   )
 }
 
@@ -525,12 +524,12 @@ export function LogsPage() {
 
 function LogQuickDrawer({ item, onClose }: { item: AdminDailyLogItem; onClose: () => void }) {
   return (
-    <Drawer
+    <DetailModal
       open
       onClose={onClose}
       title="Chi tiết Nhật ký"
       subtitle={`${item.id} · ${formatDate(item.date)}`}
-      width={520}
+      width="max-w-xl"
     >
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
@@ -560,7 +559,7 @@ function LogQuickDrawer({ item, onClose }: { item: AdminDailyLogItem; onClose: (
           </div>
         </div>
       </div>
-    </Drawer>
+    </DetailModal>
   )
 }
 

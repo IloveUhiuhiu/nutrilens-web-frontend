@@ -259,6 +259,132 @@ export function Modal({
   )
 }
 
+// ─── DetailModal (centered popup for detail views — replaces Drawer) ─────────
+
+export function DetailModal({
+  open,
+  onClose,
+  title,
+  subtitle,
+  children,
+  width = 'max-w-3xl',
+}: {
+  open: boolean
+  onClose: () => void
+  title: string
+  subtitle?: string
+  children: ReactNode
+  width?: string
+}) {
+  useEffect(() => {
+    if (!open) return
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [open, onClose])
+
+  if (!open) return null
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/30 p-4 backdrop-blur-[3px]"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div
+        className={cn(
+          'flex w-full flex-col rounded-[20px] border border-border bg-white shadow-2xl',
+          'max-h-[92vh]',
+          width,
+        )}
+      >
+        {/* Header */}
+        <div className="flex shrink-0 items-start justify-between border-b border-border px-6 py-4">
+          <div className="min-w-0 flex-1 pr-4">
+            <h2 className="text-base font-extrabold text-ink">{title}</h2>
+            {subtitle && (
+              <p className="mt-0.5 text-xs text-subtle">{subtitle}</p>
+            )}
+          </div>
+          <Button variant="ghost" onClick={onClose} aria-label="Đóng">
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto p-6">{children}</div>
+      </div>
+    </div>
+  )
+}
+
+// ─── DeleteConfirmModal ───────────────────────────────────────────────────────
+
+export function DeleteConfirmModal({
+  open,
+  onClose,
+  onConfirm,
+  title = 'Xác nhận xóa',
+  description,
+  isDeleting = false,
+}: {
+  open: boolean
+  onClose: () => void
+  onConfirm: () => void
+  title?: string
+  description?: string
+  isDeleting?: boolean
+}) {
+  useEffect(() => {
+    if (!open) return
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [open, onClose])
+
+  if (!open) return null
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-ink/40 p-4 backdrop-blur-[3px]"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div className="w-full max-w-sm rounded-[20px] border border-dangerSoft bg-white p-6 shadow-2xl">
+        {/* Icon */}
+        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-dangerSoft">
+          <svg className="h-6 w-6 text-danger" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+          </svg>
+        </div>
+        <h3 className="text-base font-extrabold text-ink">{title}</h3>
+        <p className="mt-2 text-sm text-subtle">
+          {description ?? 'Hành động này không thể hoàn tác. Bản ghi sẽ bị xóa vĩnh viễn khỏi hệ thống.'}
+        </p>
+        <div className="mt-5 flex gap-3">
+          <button
+            type="button"
+            className="btn btn-secondary flex-1"
+            onClick={onClose}
+            disabled={isDeleting}
+          >
+            Hủy bỏ
+          </button>
+          <button
+            type="button"
+            className="btn btn-danger flex-1"
+            onClick={onConfirm}
+            disabled={isDeleting}
+          >
+            {isDeleting ? 'Đang xóa...' : 'Xóa'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Drawer (slide-out from right) ────────────────────────────────────────────
 
 export function Drawer({

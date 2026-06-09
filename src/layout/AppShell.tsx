@@ -8,6 +8,7 @@ import {
   KeySquare,
   LogOut,
   Settings,
+  ShieldCheck,
   Users,
 } from 'lucide-react'
 import { Toaster } from 'sonner'
@@ -34,6 +35,7 @@ const navGroups = [
     items: [
       { to: '/accounts/activity-levels', label: 'Mức Vận động', icon: Activity },
       { to: '/accounts/otp', label: 'Mã OTP', icon: KeySquare },
+      { to: '/auth-matrix', label: 'Vai trò & Quyền', icon: ShieldCheck },
       { to: '/settings', label: 'Cài đặt', icon: Settings },
     ],
   },
@@ -54,8 +56,8 @@ export function AppShell() {
           className="flex items-center gap-3 border-b border-border px-4 py-4 text-left transition hover:bg-muted/60"
           onClick={() => navigate('/')}
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-primary text-sm font-extrabold text-white shadow-md shadow-primary/25">
-            NL
+          <div className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-primary p-1.5 shadow-md shadow-primary/25">
+            <img src="/logo.png" alt="NutriLens" className="h-full w-full object-contain" />
           </div>
           <div>
             <p className="text-[15px] font-extrabold leading-tight text-ink">NutriLens</p>
@@ -126,10 +128,10 @@ export function AppShell() {
           <div className="flex h-14 items-center gap-3 px-4 sm:px-6">
             {/* Mobile logo */}
             <button
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-primary text-xs font-extrabold text-white xl:hidden"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-primary p-1.5 xl:hidden"
               onClick={() => navigate('/')}
             >
-              NL
+              <img src="/logo.png" alt="NutriLens" className="h-full w-full object-contain" />
             </button>
 
             {/* Page spacer (search removed from top-bar, kept in sidebar) */}
