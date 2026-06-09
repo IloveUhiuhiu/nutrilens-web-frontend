@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link, NavLink, Outlet } from 'react-router-dom'
+import { Link, NavLink, Outlet, useParams } from 'react-router-dom'
 import { Search } from 'lucide-react'
 import { toast } from 'sonner'
 import { request } from '../api/client'
