@@ -2,12 +2,14 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { request, tokenStore } from '../api/client'
-import type { Profile, Tokens } from '../api/types'
+import type { Profile, Tokens, UserPermissions } from '../api/types'
 
 type AuthContextValue = {
   isAuthenticated: boolean
   profile?: Profile
   isProfileLoading: boolean
+  permissions: string[]
+  isSuperuser: boolean
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
 }
@@ -25,11 +27,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     retry: false,
   })
 
+  const permissionsQuery = useQuery({
+    queryKey: ['my-permissions', profileQuery.data?.id],
+    queryFn: () =>
+      request<UserPermissions>({
+        url: `/admin/accounts/${profileQuery.data!.id}/permissions/`,
+      }),
+    enabled: hasToken && !!profileQuery.data?.id,
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+  })
+
   const value = useMemo<AuthContextValue>(
     () => ({
       isAuthenticated: hasToken,
       profile: profileQuery.data,
       isProfileLoading: profileQuery.isFetching,
+      permissions: permissionsQuery.data?.effective_permissions ?? [],
+      isSuperuser: permissionsQuery.data?.is_superuser ?? false,
       login: async (email, password) => {
         const tokens = await request<Tokens>({
           url: '/accounts/login/',
@@ -53,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       },
     }),
-    [hasToken, profileQuery.data, profileQuery.isFetching, queryClient],
+    [hasToken, profileQuery.data, profileQuery.isFetching, permissionsQuery.data, queryClient],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

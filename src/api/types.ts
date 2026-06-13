@@ -283,3 +283,35 @@ export type SystemUsageMetrics = {
   total_daily_logs: number
   total_inference_jobs: number
 }
+
+export type PermissionItem = {
+  id: number
+  name: string
+  codename: string
+  content_type: number
+  content_type_label: string
+  description: string
+}
+
+export type GroupListItem = {
+  id: number
+  name: string
+  member_count: number
+  permission_count: number
+}
+
+export type GroupDetail = {
+  id: number
+  name: string
+  member_count: number
+  permissions: PermissionItem[]
+}
+
+export type UserPermissions = {
+  user_id: string
+  email: string
+  is_staff: boolean
+  is_superuser: boolean
+  groups: { id: number; name: string }[]
+  effective_permissions: string[]
+}

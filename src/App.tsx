@@ -8,6 +8,7 @@ import { AdviceRulesPage, FoodsPage, IngredientsPage, NutritionLayout, PackagedF
 import { FeedbackPage, InferenceLayout, InferenceMetricsPage, JobDetailPage, JobsPage } from './pages/InferencePages'
 import { AnalysisLayout, LogDetailPage, LogsPage, MealDetailPage, MealsPage } from './pages/AnalysisPages'
 import { AuthMatrixPage } from './pages/AuthMatrixPage'
+import { ForbiddenPage } from './pages/ForbiddenPage'
 
 export default function App() {
   return (
@@ -44,6 +45,7 @@ export default function App() {
             <Route path="logs/:id" element={<LogDetailPage />} />
           </Route>
           <Route path="auth-matrix" element={<AuthMatrixPage />} />
+          <Route path="403" element={<ForbiddenPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
       </Route>
